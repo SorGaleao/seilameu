@@ -1,0 +1,147 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define N 4  // Tamanho da grade (pode ser alterado conforme necessário)
+
+// Função para verificar se a configuração atual é válida
+int is_valid(int grid[N][N], int row, int col, int num, int row_clues[N][N], int col_clues[N][N]) {
+    // Verificar se o número já está presente na linha ou coluna
+    int i = 0;
+    while (i < N) {
+        if (grid[row][i] == num || grid[i][col] == num) {
+            return 0;  // Não pode colocar o número aqui
+        }
+        i++;
+    }
+
+    // Verificar a visibilidade de edifícios na linha e na coluna
+    int visible_row = 0, visible_col = 0;
+    int max_height = 0;
+
+    // Contar edifícios visíveis na linha
+    i = 0;
+    while (i < N) {
+        if (grid[row][i] > max_height) {
+            visible_row++;
+            max_height = grid[row][i];
+        }
+        i++;
+    }
+
+    // Contar edifícios visíveis na coluna
+    max_height = 0;
+    i = 0;
+    while (i < N) {
+        if (grid[i][col] > max_height) {
+            visible_col++;
+            max_height = grid[i][col];
+        }
+        i++;
+    }
+
+    // Comparar com as pistas fornecidas
+    if (visible_row > row_clues[row][0] || visible_col > col_clues[col][0]) {
+        return 0;
+    }
+
+    return 1;
+}
+
+// Função de backtracking para resolver o problema
+int solve(int grid[N][N], int row, int col, int row_clues[N][N], int col_clues[N][N]) {
+    // Se chegamos ao final da grade, o problema foi resolvido
+    if (row == N) {
+        return 1;
+    }
+
+    // Se a coluna chega ao final, vamos para a próxima linha
+    if (col == N) {
+        return solve(grid, row + 1, 0, row_clues, col_clues);
+    }
+
+    // Tentar todos os números possíveis
+    int num = 1;
+    while (num <= N) {
+        // Verificar se a colocação é válida
+        if (is_valid(grid, row, col, num, row_clues, col_clues)) {
+            grid[row][col] = num;  // Coloca o número na célula
+
+            // Recursivamente tentar preencher o restante da grade
+            if (solve(grid, row, col + 1, row_clues, col_clues)) {
+                return 1;  // Se a solução for encontrada, retorne sucesso
+            }
+
+            grid[row][col] = 0;  // Se não encontrar solução, desfaz a alteração
+        }
+        num++;
+    }
+
+    return 0;  // Se nenhuma solução for encontrada, retorna falha
+}
+
+// Função para imprimir a grade
+void print_grid(int grid[N][N]) {
+    int i = 0;
+    while (i < N) {
+        int j = 0;
+        while (j < N) {
+            printf("%d ", grid[i][j]);
+            j++;
+        }
+        printf("\n");
+        i++;
+    }
+}
+
+// Função para processar a entrada e preencher as pistas
+void process_input(char *input, int row_clues[N][N], int col_clues[N][N]) {
+    int i = 0;
+    char *token = strtok(input, " ");  // Separar os números
+
+    while (token != NULL) {
+        int value = atoi(token);  // Converter a string para inteiro
+
+        // Preencher as pistas de acordo com a posição
+        if (i < N) {
+            col_clues[i][0] = value;  // Coluna superior
+        } else if (i < 2 * N) {
+            col_clues[i - N][1] = value;  // Coluna inferior
+        } else if (i < 3 * N) {
+            row_clues[i - 2 * N][0] = value;  // Linha esquerda
+        } else {
+            row_clues[i - 3 * N][1] = value;  // Linha direita
+        }
+
+        // Passar para o próximo número
+        token = strtok(NULL, " ");
+        i++;
+    }
+}
+
+int main(int argc, char *argv[]) {
+    // Verificar se o número de argumentos está correto
+    if (argc != 2) {
+        printf("Uso correto: %s '16 números separados por espaço'\n", argv[0]);
+        return 1;
+    }
+
+    // Inicializar a grade com 0
+    int grid[N][N] = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+    
+    // Inicializar as pistas
+    int row_clues[N][N] = {0};
+    int col_clues[N][N] = {0};
+
+    // Processar a entrada de dados
+    process_input(argv[1], row_clues, col_clues);
+
+    // Resolver o quebra-cabeça
+    if (solve(grid, 0, 0, row_clues, col_clues)) {
+        printf("Solução encontrada:\n");
+        print_grid(grid);
+    } else {
+        printf("Nenhuma solução encontrada.\n");
+    }
+
+    return 0;
+}
