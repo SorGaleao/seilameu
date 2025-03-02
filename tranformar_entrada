@@ -1,0 +1,38 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>  // Para usar a função write
+
+#define N 4  // Tamanho da grade (pode ser alterado conforme necessário)
+
+// Função para processar a entrada e preencher as pistas
+void process_input(char *input, int row_clues[N][N], int col_clues[N][N]) {
+    int i = 0, j = 0;
+    char temp[10];  // Buffer temporário para armazenar cada número como string
+    int temp_index = 0;
+
+    // Processar todos os caracteres da entrada
+    while (input[i] != '\0') {
+        if (input[i] == ' ') {
+            temp[temp_index] = '\0';  // Finaliza a string temporária
+            int value = atoi(temp);   // Converte a string para número inteiro
+
+            // Preencher as pistas de acordo com a posição
+            if (j < N) {
+                col_clues[j][0] = value;  // Coluna superior
+            } else if (j < 2 * N) {
+                col_clues[j - N][1] = value;  // Coluna inferior
+            } else if (j < 3 * N) {
+                row_clues[j - 2 * N][0] = value;  // Linha esquerda
+            } else {
+                row_clues[j - 3 * N][1] = value;  // Linha direita
+            }
+
+            // Limpa o buffer temporário e avança
+            temp_index = 0;
+            j++;
+        } else {
+            temp[temp_index++] = input[i];  // Adiciona o caractere ao buffer
+        }
+        i++;
+    }
+}
